@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#f7f2ea">
+<title>Little Ledger — College Grade Calculator</title>
+<style>
+:root{
+  --bg:#e9dfcf;--paper:#f8f1e5;--ink:#44372c;--muted:#897866;
+  --blue:#d7c3a5;--blue-deep:#80664b;--pink:#d9c5ad;--pink-deep:#92765a;
+  --yellow:#e8d7b8;--green:#c9c0a8;--lav:#d8cbb8;--line:#ded0bc;
+  --shadow:0 12px 32px rgba(75,55,35,.09);--radius:22px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:
+ radial-gradient(circle at 8% 10%,rgba(190,165,128,.20),transparent 22rem),
+ radial-gradient(circle at 92% 22%,rgba(218,197,166,.25),transparent 24rem),
+ var(--bg);color:var(--ink);font-family:ui-rounded,"Trebuchet MS",system-ui,sans-serif;min-height:100vh}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.app{width:min(1120px,calc(100% - 32px));margin:0 auto;padding:28px 0 48px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:46px;height:46px;border-radius:14px;background:var(--blue);display:grid;place-items:center;font-size:14px;font-weight:850;letter-spacing:1px;color:#59452f;box-shadow:inset 0 -4px rgba(75,110,130,.08)}
+.brand h1{font-size:20px;margin:0;letter-spacing:-.5px}.brand small{color:var(--muted);display:block;font-size:11px;margin-top:2px;letter-spacing:1.5px;text-transform:uppercase}
+.top-actions{display:flex;gap:9px;align-items:center}
+.pill{border:1px solid var(--line);background:rgba(255,253,249,.8);border-radius:999px;padding:9px 13px;color:var(--muted);font-size:12px}
+.hero{background:var(--paper);border:1px solid var(--line);border-radius:30px;padding:28px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;right:28px;top:12px;font-size:68px;color:rgba(190,165,128,.22);transform:rotate(18deg)}
+.eyebrow{color:var(--blue-deep);font-size:11px;font-weight:800;letter-spacing:1.8px;text-transform:uppercase}
+.hero h2{font-size:clamp(25px,4vw,38px);letter-spacing:-1.2px;margin:9px 0 6px;max-width:650px}
+.hero p{margin:0;color:var(--muted);font-size:14px}
+.name-row{display:flex;align-items:center;gap:10px;margin-top:22px;max-width:520px}
+.name-row input{flex:1;min-width:0}
+input,select{background:#fbf6ed;border:1px solid var(--line);border-radius:13px;padding:12px 13px;color:var(--ink);outline:none;width:100%;transition:.2s}
+input:focus,select:focus{border-color:var(--blue-deep);box-shadow:0 0 0 3px rgba(128,102,75,.16)}
+button:focus-visible{outline:3px solid rgba(128,102,75,.28);outline-offset:2px}
+.btn{border:0;border-radius:13px;padding:11px 16px;font-weight:750;transition:transform .15s,filter .15s}
+.btn:hover{transform:translateY(-1px);filter:brightness(.98)}
+.btn-primary{background:var(--blue-deep);color:white}.btn-soft{background:#e9ddca;color:#6f573d}.btn-pink{background:#ead9c8;color:#806247}.btn-plain{background:transparent;color:var(--muted);border:1px solid var(--line)}
+.dashboard{display:grid;grid-template-columns:1.2fr .8fr;gap:16px;margin:18px 0}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:21px;box-shadow:var(--shadow)}
+.section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px}
+.section-head h3{margin:0;font-size:16px}.section-head p{margin:4px 0 0;color:var(--muted);font-size:12px}
+.average-card{background:linear-gradient(135deg,#eee3d1,#e5d5bd);border-radius:18px;padding:20px;min-height:164px;display:flex;flex-direction:column;justify-content:space-between}
+.average-label{font-size:11px;text-transform:uppercase;letter-spacing:1.4px;color:#806b52;font-weight:800}
+.average-value{font-size:clamp(35px,5vw,48px);font-weight:850;letter-spacing:-2px;color:#70563c;line-height:1.1;margin:10px 0}
+.average-foot{display:flex;justify-content:space-between;gap:10px;color:#71828b;font-size:12px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:10px}
+.stat{background:#f2e9dc;border:1px solid var(--line);border-radius:14px;padding:12px}
+.stat b{display:block;font-size:20px}.stat span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+.result-panel{display:flex;flex-direction:column;gap:12px}
+.mode-switch{display:flex;background:#f4f1eb;border-radius:12px;padding:4px;gap:4px}
+.mode-switch button{border:0;background:transparent;padding:9px 8px;border-radius:9px;flex:1;color:var(--muted);font-size:12px;font-weight:750}
+.mode-switch button.active{background:white;color:var(--ink);box-shadow:0 2px 8px #0000000c}
+.grade-result{border-radius:17px;background:#eee2cc;padding:17px;flex:1;display:flex;flex-direction:column;justify-content:center}
+.grade-result .big{font-size:35px;font-weight:850;letter-spacing:-1px;color:#765a38}
+.grade-result p{font-size:12px;color:#89765e;margin:5px 0 0}
+.progress{height:8px;background:#e9e4dc;border-radius:20px;overflow:hidden;margin-top:13px}
+.progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,#a88c68,#c5b18d);border-radius:20px;transition:width .35s}
+.content-grid{display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start}
+.grade-panel{min-width:0}
+.grade-list{display:flex;flex-direction:column;gap:9px}
+.grade-item{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:15px;background:#fbf6ed;animation:rise .25s ease}
+@keyframes rise{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.item-icon{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;font-size:19px;background:#eee4d5}
+.item-main{min-width:0}.item-main b{display:block;font-size:13px;overflow-wrap:anywhere}.item-main small{color:var(--muted);font-size:11px}
+.item-score{text-align:right}.item-score b{display:block;font-size:14px}.item-score small{font-size:10px;color:var(--muted)}
+.item-actions{display:flex;gap:5px;margin-top:5px;justify-content:flex-end}
+.icon-btn{border:0;background:#eee6da;border-radius:8px;padding:5px 8px;color:#77818a;font-size:11px}
+.empty{text-align:center;padding:35px 15px;color:var(--muted)}
+.empty .emoji{font-size:34px;margin-bottom:8px}.empty b{display:block;color:var(--ink);font-size:14px}.empty p{font-size:12px;line-height:1.6;max-width:260px;margin:6px auto}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.field{display:flex;flex-direction:column;gap:6px}.field label{font-size:11px;font-weight:800;color:#707b84;letter-spacing:.4px}
+.field.full{grid-column:1/-1}
+.helper{font-size:10px;color:var(--muted);line-height:1.45}
+.form-actions{display:flex;gap:8px;margin-top:14px}.form-actions button{flex:1}
+.music-panel{margin-top:16px;background:#e9dcc9;border:1px solid #d9c7ad;border-radius:var(--radius);padding:18px;position:relative;overflow:hidden}
+.music-top{display:flex;gap:12px;align-items:center}
+.music-box{width:60px;height:60px;border-radius:17px;background:#cdb89b;display:grid;place-items:center;font-size:28px;box-shadow:inset 0 -5px #b49a78;position:relative}
+.music-box.playing .note{animation:bob .7s infinite alternate}
+@keyframes bob{to{transform:translateY(-6px) rotate(8deg)}}
+.music-info{min-width:0;flex:1}.music-info b{font-size:13px;display:block}.music-info small{font-size:10px;color:#806b52}
+.music-controls{display:flex;align-items:center;gap:8px;margin-top:13px}
+.music-controls button{border:0;border-radius:10px;padding:8px 11px;background:#f8f0e5;color:#735b43}
+.music-controls input{padding:0;accent-color:#80664b;flex:1}
+.music-note{font-size:10px;color:#806b52;line-height:1.5;margin:10px 0 0}
+#playerHost{position:absolute;width:1px;height:1px;left:-9999px;top:-9999px;overflow:hidden}
+.settings{margin-top:16px}
+.settings details{border:1px solid var(--line);border-radius:15px;padding:13px 15px;background:#fbf6ed}
+.settings summary{font-size:13px;font-weight:800;cursor:pointer}
+.thresholds{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:13px}
+.thresholds label{font-size:10px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+.thresholds input{padding:8px}
+.footer{text-align:center;color:#8b7a67;font-size:10px;padding:24px 0 0}
+.toast{position:fixed;bottom:20px;left:50%;transform:translate(-50%,20px);background:#514334;color:white;padding:11px 16px;border-radius:12px;font-size:12px;opacity:0;pointer-events:none;transition:.25s;z-index:20}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.modal-backdrop{position:fixed;inset:0;background:#26323c66;display:none;place-items:center;padding:18px;z-index:30}
+.modal-backdrop.show{display:grid}
+.modal{background:var(--paper);border-radius:22px;padding:22px;width:min(420px,100%);box-shadow:var(--shadow)}
+.modal h3{margin:0 0 8px}.modal p{font-size:13px;color:var(--muted);line-height:1.5}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+@media(max-width:780px){.dashboard{grid-template-columns:1fr}.content-grid{grid-template-columns:1fr}.side-column{display:grid;grid-template-columns:1fr 1fr;gap:12px}.music-panel{margin-top:0}.settings{margin-top:0}}
+@media(max-width:540px){.app{width:min(100% - 20px,1120px);padding-top:15px}.hero{padding:21px}.hero:after{font-size:45px;right:16px}.topbar{align-items:flex-start}.top-actions{flex-direction:column;align-items:flex-end}.pill{font-size:10px}.name-row{flex-direction:column;align-items:stretch}.name-row .btn{width:100%}.panel{padding:16px}.side-column{display:flex;flex-direction:column}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.grade-item{grid-template-columns:36px minmax(0,1fr) auto;gap:8px;padding:10px}.item-icon{width:36px;height:36px}.item-score b{font-size:12px}.stats{gap:6px}.stat{padding:10px}.stat b{font-size:17px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><div class="logo">LL</div><div><h1>Little Ledger</h1><small>your little grade companion</small></div></div>
+    <div class="top-actions"><span class="pill">☁︎ Stored on this device</span><button class="btn btn-plain" id="clearBtn" type="button">Clear all</button></div>
+  </header>
+
+  <section class="hero">
+    <div class="eyebrow">Your grades, in one place</div>
+    <h2>Hey there, student.</h2>
+    <p>Keep your scores together and see how you're doing, one activity at a time.</p>
+    <div class="name-row">
+      <input id="studentName" maxlength="60" placeholder="Type your name here..." aria-label="Student name">
+      <button class="btn btn-primary" id="saveName" type="button">Save my name</button>
+    </div>
+  </section>
+
+  <section class="dashboard">
+    <div class="panel">
+      <div class="section-head"><div><h3>Your score snapshot</h3><p>A live look at all the points you've entered.</p></div><span>📚</span></div>
+      <div class="average-card">
+        <div class="average-label">Overall percentage average</div>
+        <div class="average-value" id="average">0.000%</div>
+        <div class="average-foot"><span id="pointsLine">0 earned / 0 possible points</span><span id="countLine">0 entries</span></div>
+      </div>
+      <div class="stats">
+        <div class="stat"><b id="totalItems">0</b><span>Grade entries</span></div>
+        <div class="stat"><b id="totalEarned">0</b><span>Points earned</span></div>
+        <div class="stat"><b id="totalPossible">0</b><span>Points possible</span></div>
+      </div>
+    </div>
+    <div class="panel result-panel">
+      <div class="section-head"><div><h3>Grade equivalent</h3><p>Choose how you want to view your result.</p></div></div>
+      <div class="mode-switch" role="group" aria-label="Result display mode">
+        <button type="button" class="active" data-mode="percent">Percentage</button>
+        <button type="button" data-mode="college">College grade</button>
+      </div>
+      <div class="grade-result">
+        <div class="average-label" id="resultLabel">Your current average</div>
+        <div class="big" id="gradeEquivalent">—</div>
+        <p id="statusText">Add your first score to see your result.</p>
+        <div class="progress"><span id="progressBar"></span></div>
+      </div>
+      <div class="helper">College grade conversion starts with an editable sample scale. Update it below to match your school's official grading table.</div>
+    </div>
+  </section>
+
+  <section class="content-grid">
+    <div class="panel grade-panel">
+      <div class="section-head">
+        <div><h3>My grades</h3><p>Add quizzes, activities, projects, and more.</p></div>
+        <button class="btn btn-primary" id="showFormBtn" type="button">＋ Add grade</button>
+      </div>
+      <div id="gradeList" class="grade-list">
+        <div class="empty"><div class="emoji">📝</div><b>Your grade list is waiting!</b><p>Add your first quiz, activity, or project. Every little score counts.</p></div>
+      </div>
+    </div>
+
+    <aside class="side-column">
+      <div class="panel" id="entryPanel">
+        <div class="section-head"><div><h3 id="formTitle">New grade entry</h3><p>What did you score?</p></div></div>
+        <form id="gradeForm">
+          <div class="form-grid">
+            <div class="field full"><label for="gradeTitle">TITLE / LABEL</label><input id="gradeTitle" maxlength="70" placeholder="e.g. Quiz 1, Chapter 2" required></div>
+            <div class="field full"><label for="gradeType">CATEGORY</label>
+              <select id="gradeType">
+                <option>Quiz</option><option>Activity</option><option>Assignment</option><option>Project</option><option>Examination</option><option>Recitation</option><option>Laboratory</option><option>Other</option>
+              </select>
+            </div>
+            <div class="field"><label for="earned">POINTS EARNED</label><input id="earned" type="number" min="0" step="any" placeholder="e.g. 18" required></div>
+            <div class="field"><label for="possible">TOTAL POINTS</label><input id="possible" type="number" min="0.000001" step="any" placeholder="e.g. 20" required></div>
+            <div class="field full helper">Example: enter <b>18</b> earned and <b>20</b> total for an 18/20 score. Use points, not a precomputed percentage.</div>
+          </div>
+          <div class="form-actions"><button class="btn btn-primary" id="submitGrade" type="submit">Add to my grades</button><button class="btn btn-plain" id="cancelEdit" type="button" hidden>Cancel</button></div>
+        </form>
+      </div>
+
+      <div class="music-panel">
+        <div class="music-top">
+          <div class="music-box" id="musicBox"><span class="note">♫</span></div>
+          <div class="music-info"><b>Little Music Box</b><small>Your study playlist · YouTube</small></div>
+        </div>
+        <div class="music-controls">
+          <button id="playBtn" type="button" aria-label="Play playlist">▶</button>
+          <button id="muteBtn" type="button" aria-label="Mute playlist">♪</button>
+          <input id="volume" type="range" min="0" max="100" value="35" aria-label="Music volume">
+          <span id="volumeText" style="font-size:10px;color:#806b52;width:30px;text-align:right">35%</span>
+        </div>
+        <p class="music-note">Press play to start the playlist. YouTube may show ads or require playback controls depending on your browser and the video owner's settings.</p>
+        <div id="playerHost"><div id="ytPlayer"></div></div>
+      </div>
+      <div class="settings">
+        <details>
+          <summary>⚙️ College grade conversion settings</summary>
+          <p class="helper">Sample Philippine-style scale. These cutoffs are only a starting point, not your school's official policy. Set the minimum percentage for each grade. Scores below the 3.00 cutoff are marked 5.00 / Failed.</p>
+          <div class="thresholds" id="thresholds"></div>
+          <div class="form-actions"><button class="btn btn-soft" id="saveScale" type="button">Save grade scale</button><button class="btn btn-plain" id="resetScale" type="button">Reset sample</button></div>
+        </details>
+      </div>
+    </aside>
+  </section>
+  <footer class="footer">A simple space to keep track of your grades · Your data stays in this browser.</footer>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="modal-backdrop" id="clearModal" role="dialog" aria-modal="true" aria-labelledby="clearTitle">
+  <div class="modal"><h3 id="clearTitle">Clear your grade list?</h3><p>This will delete the saved name and all grade entries from this browser. This cannot be undone.</p><div class="modal-actions"><button class="btn btn-plain" id="keepData" type="button">Keep my data</button><button class="btn btn-pink" id="confirmClear" type="button">Clear everything</button></div></div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const STORAGE_KEY = "littleLedger.v1";
+  const PLAYLIST_ID = "PLc1iM7_yVvYo";
+  const SAMPLE_SCALE = [
+    {grade:"1.00", min:97},{grade:"1.25", min:94},{grade:"1.50", min:91},
+    {grade:"1.75", min:88},{grade:"2.00", min:85},{grade:"2.25", min:82},
+    {grade:"2.50", min:79},{grade:"2.75", min:76},{grade:"3.00", min:75}
+  ];
+  const icons = {Quiz:"Q",Activity:"A",Assignment:"AS",Project:"P",Examination:"EX",Recitation:"R",Laboratory:"L",Other:"+"};
+  const $ = id => document.getElementById(id);
+  let data = loadData();
+  let editId = null;
+  let mode = "percent";
+  let player = null, playerReady = false, isPlaying = false, muted = false;
+
+  function loadData(){
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+      if(saved && Array.isArray(saved.grades)) return {
+        name: typeof saved.name === "string" ? saved.name : "",
+        grades: saved.grades.filter(g => g && typeof g.id === "string" && Number.isFinite(+g.earned) && Number.isFinite(+g.possible) && +g.possible > 0),
+        scale: validScale(saved.scale) ? saved.scale : SAMPLE_SCALE.map(x=>({...x}))
+      };
+    } catch(e) {}
+    return {name:"",grades:[],scale:SAMPLE_SCALE.map(x=>({...x}))};
+  }
+  function validScale(scale){
+    return Array.isArray(scale) && scale.length === 9 && scale.every(x=>x && Number.isFinite(+x.min) && +x.min>=0 && +x.min<=100);
+  }
+  function persist(){
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+    catch(e){ toast("Could not save. Your browser storage may be full or disabled."); }
+  }
+  function toast(message){
+    $("toast").textContent=message;$("toast").classList.add("show");
+    clearTimeout(toast.timer);toast.timer=setTimeout(()=>$("toast").classList.remove("show"),2400);
+  }
+  function totals(){
+    return data.grades.reduce((a,g)=>({earned:a.earned+Number(g.earned),possible:a.possible+Number(g.possible)}),{earned:0,possible:0});
+  }
+  function average(){
+    const t=totals();return t.possible>0 ? t.earned/t.possible*100 : null;
+  }
+  function collegeGrade(avg){
+    if(avg===null)return null;
+    const sorted=[...data.scale].sort((a,b)=>Number(b.min)-Number(a.min));
+    const match=sorted.find(x=>avg>=Number(x.min));
+    return match ? match.grade : "5.00";
+  }
+  function statusFor(avg){
+    if(avg===null)return "Add your first score to see your result.";
+    return avg>=75 ? "Passed — keep up the good work! 🌱" : "Below the sample passing mark — there's room to improve. 💛";
+  }
+  function fmt(n){
+    return Number(n).toLocaleString(undefined,{maximumFractionDigits:3});
+  }
+  function render(){
+    const t=totals(),avg=average();
+    $("studentName").value=data.name;
+    $("average").textContent=avg===null?"0.000%":avg.toFixed(3)+"%";
+    $("pointsLine").textContent=fmt(t.earned)+" earned / "+fmt(t.possible)+" possible points";
+    $("countLine").textContent=data.grades.length+" "+(data.grades.length===1?"entry":"entries");
+    $("totalItems").textContent=data.grades.length;
+    $("totalEarned").textContent=fmt(t.earned);
+    $("totalPossible").textContent=fmt(t.possible);
+    $("gradeEquivalent").textContent=avg===null?"—":(mode==="percent"?avg.toFixed(3)+"%":collegeGrade(avg));
+    $("resultLabel").textContent=mode==="percent"?"Your current average":"College grade equivalent";
+    $("statusText").textContent=avg===null?statusFor(null):(mode==="percent"?statusFor(avg):(avg>=75?"Passed · "+statusFor(avg):"Failed · "+statusFor(avg)));
+    $("progressBar").style.width=(avg===null?0:Math.max(0,Math.min(100,avg)))+"%";
+    document.querySelectorAll("[data-mode]").forEach(b=>b.classList.toggle("active",b.dataset.mode===mode));
+    const list=$("gradeList");list.innerHTML="";
+    if(!data.grades.length){
+      list.innerHTML='<div class="empty"><div class="emoji">📝</div><b>Your grade list is waiting!</b><p>Add your first quiz, activity, or project. Every little score counts.</p></div>';
+    } else {
+      [...data.grades].sort((a,b)=>a.created-b.created).forEach(g=>{
+        const pct=Number(g.earned)/Number(g.possible)*100;
+        const item=document.createElement("article");item.className="grade-item";
+        const icon=document.createElement("div");icon.className="item-icon";icon.textContent=icons[g.type]||"⭐";
+        const main=document.createElement("div");main.className="item-main";
+        const title=document.createElement("b");title.textContent=g.title;
+        const sub=document.createElement("small");sub.textContent=g.type+" · "+fmt(g.earned)+" / "+fmt(g.possible)+" points";
+        main.append(title,sub);
+        const score=document.createElement("div");score.className="item-score";
+        const value=document.createElement("b");value.textContent=pct.toFixed(2)+"%";
+        const actions=document.createElement("div");actions.className="item-actions";
+        const edit=document.createElement("button");edit.className="icon-btn";edit.type="button";edit.textContent="Edit";edit.addEventListener("click",()=>startEdit(g.id));
+        const del=document.createElement("button");del.className="icon-btn";del.type="button";del.textContent="Delete";del.addEventListener("click",()=>deleteGrade(g.id));
+        actions.append(edit,del);score.append(value,actions);item.append(icon,main,score);list.append(item);
+      });
+    }
+  }
+  function resetForm(){
+    editId=null;$("gradeForm").reset();$("formTitle").textContent="New grade entry";
+    $("submitGrade").textContent="Add to my grades";$("cancelEdit").hidden=true;
+  }
+  function startEdit(id){
+    const g=data.grades.find(x=>x.id===id);if(!g)return;
+    editId=id;$("gradeTitle").value=g.title;$("gradeType").value=g.type;
+    $("earned").value=g.earned;$("possible").value=g.possible;
+    $("formTitle").textContent="Edit grade entry";$("submitGrade").textContent="Save changes";$("cancelEdit").hidden=false;
+    $("entryPanel").scrollIntoView({behavior:"smooth",block:"center"});
+  }
+  function deleteGrade(id){
+    data.grades=data.grades.filter(g=>g.id!==id);persist();render();toast("Grade entry deleted.");
+    if(editId===id)resetForm();
+  }
+  $("saveName").addEventListener("click",()=>{
+    data.name=$("studentName").value.trim().slice(0,60);persist();
+    toast(data.name?`Name saved. Hi, ${data.name}!`:"Name cleared.");
+  });
+  $("studentName").addEventListener("keydown",e=>{if(e.key==="Enter")$("saveName").click();});
+  $("showFormBtn").addEventListener("click",()=>{$("entryPanel").scrollIntoView({behavior:"smooth",block:"center"});$("gradeTitle").focus();});
+  $("cancelEdit").addEventListener("click",resetForm);
+  $("gradeForm").addEventListener("submit",e=>{
+    e.preventDefault();
+    const title=$("gradeTitle").value.trim(),type=$("gradeType").value;
+    const earned=Number($("earned").value),possible=Number($("possible").value);
+    if(!title){toast("Please add a title for this grade.");return;}
+    if(!Number.isFinite(earned)||!Number.isFinite(possible)||earned<0||possible<=0){toast("Enter valid points. Total points must be greater than zero.");return;}
+    if(earned>possible){toast("Points earned cannot be higher than total points.");return;}
+    if(editId){
+      const g=data.grades.find(x=>x.id===editId);
+      if(g)Object.assign(g,{title,type,earned,possible});
+      toast("Grade entry updated!");
+    } else {
+      data.grades.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random(),title,type,earned,possible,created:Date.now()});
+      toast("Grade added.");
+    }
+    persist();resetForm();render();
+  });
+  document.querySelectorAll("[data-mode]").forEach(b=>b.addEventListener("click",()=>{mode=b.dataset.mode;render();}));
+  $("clearBtn").addEventListener("click",()=>$("clearModal").classList.add("show"));
+  $("keepData").addEventListener("click",()=>$("clearModal").classList.remove("show"));
+  $("confirmClear").addEventListener("click",()=>{
+    data={name:"",grades:[],scale:SAMPLE_SCALE.map(x=>({...x}))};
+    try{localStorage.removeItem(STORAGE_KEY);}catch(e){}
+    resetForm();$("clearModal").classList.remove("show");render();renderScale();toast("All local data cleared.");
+  });
+  $("clearModal").addEventListener("click",e=>{if(e.target===$("clearModal"))$("clearModal").classList.remove("show");});
+
+  function renderScale(){
+    const box=$("thresholds");box.innerHTML="";
+    data.scale.forEach((x,i)=>{
+      const label=document.createElement("label");label.textContent=x.grade+" · minimum %";
+      const input=document.createElement("input");input.type="number";input.min="0";input.max="100";input.step=".01";input.value=x.min;input.dataset.index=i;input.setAttribute("aria-label",x.grade+" minimum percentage");
+      label.append(input);box.append(label);
+    });
+  }
+  $("saveScale").addEventListener("click",()=>{
+    const inputs=[...$("thresholds").querySelectorAll("input")];
+    const values=inputs.map(i=>Number(i.value));
+    if(values.some(v=>!Number.isFinite(v)||v<0||v>100)){toast("Every cutoff must be between 0 and 100.");return;}
+    if(new Set(values).size!==values.length){toast("Each grade must have a different cutoff.");return;}
+    if(values[8]<=0){toast("The 3.00 passing cutoff must be above zero.");return;}
+    data.scale=inputs.map((input,i)=>({grade:SAMPLE_SCALE[i].grade,min:values[i]}));
+    persist();render();toast("Your grade scale has been saved.");
+  });
+  $("resetScale").addEventListener("click",()=>{data.scale=SAMPLE_SCALE.map(x=>({...x}));persist();renderScale();render();toast("Sample scale restored.");});
+
+  // YouTube IFrame Player API: playback starts only after the visitor presses Play.
+  window.onYouTubeIframeAPIReady=function(){
+    player=new YT.Player("ytPlayer",{
+      height:"1",width:"1",
+      playerVars:{listType:"playlist",list:PLAYLIST_ID,loop:1,playsinline:1,controls:0,rel:0},
+      events:{
+        onReady:()=>{
+          playerReady=true;player.setVolume(Number($("volume").value));
+          try{player.setLoop(true);}catch(e){}
+        },
+        onStateChange:e=>{
+          isPlaying=e.data===YT.PlayerState.PLAYING;
+          $("playBtn").textContent=isPlaying?"Ⅱ":"▶";
+          $("playBtn").setAttribute("aria-label",isPlaying?"Pause playlist":"Play playlist");
+          $("musicBox").classList.toggle("playing",isPlaying);
+        },
+        onError:()=>toast("Playlist playback is unavailable for this video.")
+      }
+    });
+  };
+  function loadYouTubeAPI(){
+    if(document.querySelector('script[src="https://www.youtube.com/iframe_api"]'))return;
+    const tag=document.createElement("script");tag.src="https://www.youtube.com/iframe_api";
+    document.head.appendChild(tag);
+  }
+  $("playBtn").addEventListener("click",()=>{
+    if(!playerReady){loadYouTubeAPI();toast("Music player is loading. Press Play again in a moment.");return;}
+    if(isPlaying)player.pauseVideo();else{
+      try{if(player.getPlaylist && !player.getPlaylist())player.loadPlaylist({listType:"playlist",list:PLAYLIST_ID});else player.playVideo();}
+      catch(e){player.playVideo();}
+    }
+  });
+  $("volume").addEventListener("input",e=>{
+    const v=Number(e.target.value);$("volumeText").textContent=v+"%";
+    if(playerReady)player.setVolume(v);
+    if(v>0&&muted){muted=false;if(playerReady)player.unMute();$("muteBtn").textContent="♪";}
+  });
+  $("muteBtn").addEventListener("click",()=>{
+    muted=!muted;
+    if(playerReady){if(muted)player.mute();else player.unMute();}
+    $("muteBtn").textContent=muted?"×":"♪";
+    $("muteBtn").setAttribute("aria-label",muted?"Unmute playlist":"Mute playlist");
+  });
+
+  render();renderScale();loadYouTubeAPI();
+})();
+</script>
+</body>
+</html>
