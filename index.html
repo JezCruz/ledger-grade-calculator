@@ -146,9 +146,9 @@ button:focus-visible{outline:3px solid rgba(128,102,75,.28);outline-offset:2px}
 
   <section class="dashboard">
     <div class="panel">
-      <div class="section-head"><div><h3>Your score snapshot</h3><p>A live look at all the points you've entered.</p></div><span>📚</span></div>
+      <div class="section-head"><div><h3 id="snapshotTitle">Your score snapshot</h3><p id="snapshotSubtitle">Select a subject to see its own grade summary.</p></div><span>📚</span></div>
       <div class="average-card">
-        <div class="average-label">Overall percentage average</div>
+        <div class="average-label" id="averageLabel">Subject percentage average</div>
         <div class="average-value" id="average">0.000%</div>
         <div class="average-foot"><span id="pointsLine">0 earned / 0 possible points</span><span id="countLine">0 entries</span></div>
       </div>
@@ -157,9 +157,10 @@ button:focus-visible{outline:3px solid rgba(128,102,75,.28);outline-offset:2px}
         <div class="stat"><b id="totalEarned">0</b><span>Points earned</span></div>
         <div class="stat"><b id="totalPossible">0</b><span>Points possible</span></div>
       </div>
+      <p class="helper" id="overallContext" style="margin:10px 2px 0"></p>
     </div>
     <div class="panel result-panel">
-      <div class="section-head"><div><h3>Grade equivalent</h3><p>Choose how you want to view your result.</p></div></div>
+      <div class="section-head"><div><h3 id="equivalentTitle">Subject grade equivalent</h3><p id="equivalentSubtitle">Choose how you want to view this subject's result.</p></div></div>
       <div class="mode-switch" role="group" aria-label="Result display mode">
         <button type="button" class="active" data-mode="percent">Percentage</button>
         <button type="button" data-mode="college">College grade</button>
@@ -296,16 +297,23 @@ button:focus-visible{outline:3px solid rgba(128,102,75,.28);outline-offset:2px}
     if(s){$("formTitle").textContent=editId?"Edit grade entry":"Add a grade to "+s.name;}
   }
   function render(){
-    const grades=allGrades(),t=sum(grades),a=avg(grades),s=active(),st=s?sum(s.grades):{earned:0,possible:0};
+    const s=active(),grades=s?s.grades:allGrades(),t=sum(grades),a=avg(grades),overallGrades=allGrades(),overall=sum(overallGrades),overallAvg=avg(overallGrades);
     $("studentName").value=data.name;
+    const subjectName=s?s.name:"All subjects";
+    $("snapshotTitle").textContent=s?subjectName+" · Score snapshot":"Overall score snapshot";
+    $("snapshotSubtitle").textContent=s?"Showing grades and totals for "+subjectName+".":"Showing combined results from all your subjects.";
+    $("averageLabel").textContent=s?"Subject percentage average":"Overall percentage average";
     $("average").textContent=a===null?"0.000%":a.toFixed(3)+"%";
     $("pointsLine").textContent=fmt(t.earned)+" earned / "+fmt(t.possible)+" possible points";
     $("countLine").textContent=grades.length+" "+(grades.length===1?"entry":"entries");
     $("totalItems").textContent=grades.length;$("totalEarned").textContent=fmt(t.earned);$("totalPossible").textContent=fmt(t.possible);
+    $("equivalentTitle").textContent=s?subjectName+" · Grade equivalent":"Overall grade equivalent";
+    $("equivalentSubtitle").textContent=s?"Choose how you want to view this subject's result.":"Choose how you want to view the combined result.";
     $("gradeEquivalent").textContent=a===null?"—":mode==="percent"?a.toFixed(3)+"%":collegeGrade(a);
-    $("resultLabel").textContent=mode==="percent"?"Your overall average":"Overall college grade equivalent";
-    $("statusText").textContent=a===null?"Create a subject and add your first score.":a>=75?"Passed — keep up the good work!":"Below the sample passing mark — there's room to improve.";
+    $("resultLabel").textContent=mode==="percent"?(s?"This subject's average":"Your overall average"):"College grade equivalent";
+    $("statusText").textContent=a===null?(s?"Add grades to this subject to see its result.":"Create a subject and add your first score."):a>=75?"Passed — keep up the good work!":"Below the sample passing mark — there's room to improve.";
     $("progressBar").style.width=(a===null?0:Math.max(0,Math.min(100,a)))+"%";
+    $("overallContext").textContent=s?"All subjects combined: "+(overallAvg===null?"No grades yet":overallAvg.toFixed(3)+"% overall · "+fmt(overall.earned)+" / "+fmt(overall.possible)+" points"):"Create/select a subject to view its individual snapshot.";
     document.querySelectorAll("[data-mode]").forEach(b=>b.classList.toggle("active",b.dataset.mode===mode));
     renderSubjects();
     const list=$("gradeList");list.innerHTML="";
@@ -325,7 +333,7 @@ button:focus-visible{outline:3px solid rgba(128,102,75,.28);outline-offset:2px}
       const del=document.createElement("button");del.className="icon-btn";del.type="button";del.textContent="Delete";del.addEventListener("click",()=>deleteGrade(g.id));
       actions.append(edit,del);score.append(value,actions);item.append(icon,main,score);list.append(item);
     });
-    if(s){const avgText=avg(s.grades);$("gradeSectionHint").textContent=fmt(st.earned)+" / "+fmt(st.possible)+" points · "+(avgText===null?"No average yet":avgText.toFixed(2)+"% subject average");}
+    if(s){const subjectTotals=sum(s.grades),avgText=avg(s.grades);$("gradeSectionHint").textContent=fmt(subjectTotals.earned)+" / "+fmt(subjectTotals.possible)+" points · "+(avgText===null?"No average yet":avgText.toFixed(2)+"% subject average");}
   }
   function escapeText(v){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
   function resetForm(){editId=null;$("gradeForm").reset();$("formTitle").textContent=active()?"Add a grade to "+active().name:"Create a subject first";$("submitGrade").textContent="Add to my grades";$("cancelEdit").hidden=true;}
